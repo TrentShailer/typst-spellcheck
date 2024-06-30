@@ -16,9 +16,9 @@ use typst_syntax::{SyntaxKind, SyntaxNode};
 /// `Raw`, `Equation`, and `FieldAccess` nodes are replaced with placeholder
 /// text so lanugagetool doesn't flag them while still maintaining context.
 ///
-/// `Label`, `Hash`, `ModuleImport`, and `ModuleInclude` nodes are ignored.
+/// `Hash`, `Label`, `ModuleImport`, `ModuleInclude`, `LineComment`, `BlockComment`, `Ident` nodes are ignored.
 ///
-/// Inside a `FuncCall`, `ShowRule`, `SetRule` node, only the contents of
+/// Inside a `FuncCall`, `ShowRule`, `SetRule`, `LetBinding` node, only the contents of
 /// `Markdown` nodes are recorded.
 pub fn preprocess<'a>(root: &'a SyntaxNode) -> Vec<Paragraph<'a>> {
     let (mut paragraphs, partial_paragraph) =
@@ -80,10 +80,16 @@ fn recursively_build_paragraphs<'a>(
             SyntaxKind::Hash
             | SyntaxKind::Label
             | SyntaxKind::ModuleImport
-            | SyntaxKind::ModuleInclude => return (paragraphs, current_paragraph),
+            | SyntaxKind::ModuleInclude
+            | SyntaxKind::LineComment
+            | SyntaxKind::BlockComment
+            | SyntaxKind::Ident => return (paragraphs, current_paragraph),
 
             // Toggle code mode for code nodes
-            SyntaxKind::FuncCall | SyntaxKind::ShowRule | SyntaxKind::SetRule => code_mode = true,
+            SyntaxKind::FuncCall
+            | SyntaxKind::ShowRule
+            | SyntaxKind::SetRule
+            | SyntaxKind::LetBinding => code_mode = true,
 
             // To reduce load on languagetool, headings may be ignored
             // SyntaxKind::Heading => 'heading: {
