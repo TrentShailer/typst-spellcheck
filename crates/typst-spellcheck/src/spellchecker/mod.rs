@@ -1,4 +1,5 @@
 pub mod check_file;
+pub mod debug;
 pub mod metadata;
 
 use std::sync::Arc;

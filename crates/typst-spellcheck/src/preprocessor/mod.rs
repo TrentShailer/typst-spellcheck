@@ -16,7 +16,7 @@ use typst_syntax::{SyntaxKind, SyntaxNode};
 /// `Raw`, `Equation`, and `FieldAccess` nodes are replaced with placeholder
 /// text so lanugagetool doesn't flag them while still maintaining context.
 ///
-/// Label nodes are ignored.
+/// `Label`, `Hash`, `ModuleImport`, and `ModuleInclude` nodes are ignored.
 ///
 /// Inside a `FuncCall`, `ShowRule`, `SetRule` node, only the contents of
 /// `Markdown` nodes are recorded.
@@ -80,7 +80,10 @@ fn recursively_build_paragraphs<'a>(
         }
 
         // Hash and label nodes are ignored
-        SyntaxKind::Hash | SyntaxKind::Label => return (paragraphs, current_paragraph),
+        SyntaxKind::Hash
+        | SyntaxKind::Label
+        | SyntaxKind::ModuleImport
+        | SyntaxKind::ModuleInclude => return (paragraphs, current_paragraph),
 
         // Toggle code mode for code nodes
         SyntaxKind::FuncCall | SyntaxKind::ShowRule | SyntaxKind::SetRule => code_mode = true,

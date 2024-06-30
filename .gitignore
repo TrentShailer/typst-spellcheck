@@ -1,3 +1,4 @@
 /target
 /test-files
 typst-spellcheck.toml
+typst-spellcheck.debug.log

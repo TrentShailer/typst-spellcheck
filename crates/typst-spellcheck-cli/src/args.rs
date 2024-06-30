@@ -1,6 +1,6 @@
 use std::{ops::RangeInclusive, path::PathBuf};
 
-use clap::Parser;
+use clap::{arg, command, ArgAction, Parser};
 
 const AFTER_HELP: &str = r#"Host, Port, and Language are required options if not defined in typst-spellcheck.toml.
 
@@ -45,13 +45,17 @@ pub struct Args {
     #[arg(long)]
     pub ignore_words: Option<Vec<String>>,
 
-    /// Path to config file (checks pwd by default)
+    /// Custom path to config file (checks pwd by default)
     #[arg(long, value_hint = clap::ValueHint::DirPath)]
     pub config_file: Option<PathBuf>,
 
     /// Enable picky mode
-    #[arg(long)]
+    #[arg(long, action = ArgAction::SetTrue)]
     pub picky: Option<bool>,
+
+    /// Enable debug file output
+    #[arg(long, action = ArgAction::SetTrue)]
+    pub debug: Option<bool>,
 
     /// Typst file to spellcheck
     #[arg(value_hint = clap::ValueHint::DirPath)]

@@ -10,21 +10,40 @@ use crate::{
     problem::Problem,
 };
 
-use super::{metadata::Metadata, Spellchecker};
+use super::{
+    debug::{
+        debug_paragraphs, debug_problems, debug_response, debug_syntax_tree, setup_debug_file,
+    },
+    metadata::Metadata,
+    Spellchecker,
+};
 
 impl Spellchecker {
     pub async fn check_file(
         &self,
         file_path: &str,
         file_contents: String,
+        debug: bool,
     ) -> Result<(Vec<Problem>, Metadata), Error> {
+        if debug {
+            setup_debug_file();
+        }
+
         let source = Source::new(
             FileId::new(None, VirtualPath::new(file_path)),
             file_contents,
         );
 
+        if debug {
+            debug_syntax_tree(source.root());
+        }
+
         let paragraphs = preprocess(source.root());
         let paragraphs = merge_short(paragraphs, 512);
+
+        if debug {
+            debug_paragraphs(&paragraphs);
+        }
 
         let mut tasks: FuturesUnordered<_> = paragraphs
             .iter()
@@ -50,8 +69,12 @@ impl Spellchecker {
         let mut problems = vec![];
 
         let req_start = Instant::now();
-        while let Some((result, _paragraph, text, node_contributions)) = tasks.next().await {
+        while let Some((result, paragraph, text, node_contributions)) = tasks.next().await {
             let response = result?;
+
+            if debug {
+                debug_response(&response, &paragraph, &text, &node_contributions);
+            }
 
             for lt_match in response.matches {
                 let match_text = &text[lt_match.offset..(lt_match.offset + lt_match.length)];
@@ -84,6 +107,10 @@ impl Spellchecker {
             languagetool_request_time: req_end.duration_since(req_start),
             paragraph_count: paragraphs.len(),
         };
+
+        if debug {
+            debug_problems(&problems);
+        }
 
         Ok((problems, metadata))
     }

@@ -24,8 +24,10 @@ async fn main() {
 
 async fn run() -> Result<(), Error> {
     let args = Args::parse();
+    // TODO add a logger
 
     let file = args.file.clone();
+    let debug = args.debug.unwrap_or(false);
     let config = Config::from_args_or_file(args)?;
 
     // check if defined file exists
@@ -37,7 +39,7 @@ async fn run() -> Result<(), Error> {
 
     let contents = fs::read_to_string(&file).map_err(Error::ReadFile)?;
     let (mut problems, metadata) = spellchecker
-        .check_file(&file.to_string_lossy(), contents)
+        .check_file(&file.to_string_lossy(), contents, debug)
         .await?;
     problems.sort();
 
