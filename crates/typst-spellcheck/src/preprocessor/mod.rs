@@ -13,7 +13,7 @@ use typst_syntax::{SyntaxKind, SyntaxNode};
 ///
 /// Paragraphs are separated by `Parbreak` nodes.
 ///
-/// `Raw`, `Equation`, and `FieldAccess` nodes are replaced with placeholder
+/// `Raw`, `Equation`, `FieldAccess`, `RefMarker` nodes are replaced with placeholder
 /// text so lanugagetool doesn't flag them while still maintaining context.
 ///
 /// `Hash`, `Label`, `ModuleImport`, `ModuleInclude`, `LineComment`, `BlockComment`, `Ident`, `Underscore`. `Star` nodes are ignored.
@@ -60,7 +60,10 @@ fn recursively_build_paragraphs<'a>(
 
             // If there are other nodes in the paragraph, to maintain context
             // a fake node is appended in place of the real node.
-            SyntaxKind::Raw | SyntaxKind::Equation | SyntaxKind::FieldAccess => {
+            SyntaxKind::Raw
+            | SyntaxKind::Equation
+            | SyntaxKind::FieldAccess
+            | SyntaxKind::RefMarker => {
                 if !current_paragraph.nodes.is_empty() {
                     let node_text = format!("`{}`", node_kind.name());
                     let mut fake_node = SyntaxNode::leaf(SyntaxKind::Text, node_text);
