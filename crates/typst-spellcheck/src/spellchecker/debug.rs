@@ -55,7 +55,7 @@ pub fn debug_response(
     writeln!(&mut writer, "Response:\n{:#?}", response).unwrap();
     writeln!(&mut writer, "Paragraph:\n{:#?}", paragraph).unwrap();
     writeln!(&mut writer, "Text:\n{}", text).unwrap();
-    writeln!(&mut writer, "Contributions:\n{:#?}", node_contributions).unwrap();
+    writeln!(&mut writer, "Contributions:\n{:?}", node_contributions).unwrap();
 
     writeln!(&mut writer).unwrap();
     writer.flush().unwrap();
