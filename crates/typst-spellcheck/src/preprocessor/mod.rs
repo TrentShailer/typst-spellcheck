@@ -47,10 +47,6 @@ fn recursively_build_paragraphs<'a>(
     if code_mode {
         if node_kind == SyntaxKind::Markup {
             code_mode = false;
-            /* if !current_paragraph.nodes.is_empty() {
-                paragraphs.push(current_paragraph);
-                current_paragraph = Paragraph { nodes: vec![] };
-            } */
         }
     } else {
         match node_kind {
@@ -93,19 +89,6 @@ fn recursively_build_paragraphs<'a>(
             | SyntaxKind::SetRule
             | SyntaxKind::LetBinding => code_mode = true,
 
-            // To reduce load on languagetool, headings may be ignored
-            // SyntaxKind::Heading => 'heading: {
-            //     if !node.text().is_empty() {
-            //         break 'heading;
-            //     }
-
-            //     if spellcheck_config.ignore_headings {
-            //         return (paragraphs, current_paragraph);
-            //     } else {
-            //         current_paragraph.nodes.push(Cow::Borrowed(node));
-            //     }
-            // }
-
             // Space nodes should not be appended to empty paragraphs
             SyntaxKind::Space => 'space: {
                 if node.text().is_empty() {
@@ -116,6 +99,14 @@ fn recursively_build_paragraphs<'a>(
                     return (vec![], current_paragraph);
                 } else {
                     current_paragraph.nodes.push(Cow::Borrowed(node));
+                }
+            }
+
+            // Headings should terminate existing paragraphs
+            SyntaxKind::Heading => {
+                if !current_paragraph.nodes.is_empty() {
+                    paragraphs.push(current_paragraph);
+                    current_paragraph = Paragraph { nodes: vec![] };
                 }
             }
 
@@ -140,6 +131,17 @@ fn recursively_build_paragraphs<'a>(
         }
 
         current_paragraph = new_current_group;
+    }
+
+    match node_kind {
+        // Headings should only contain it's children
+        SyntaxKind::Heading => {
+            if !current_paragraph.nodes.is_empty() {
+                paragraphs.push(current_paragraph);
+                current_paragraph = Paragraph { nodes: vec![] };
+            }
+        }
+        _ => {}
     }
 
     (paragraphs, current_paragraph)
