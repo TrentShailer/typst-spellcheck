@@ -24,13 +24,7 @@ pub fn display_problems(
             title_sub.style(sub)
         )?;
 
-        writeln!(
-            &mut writer,
-            "  {} {} {}",
-            "-->".bright_cyan().bold(),
-            file_path,
-            problem.range
-        )?;
+        writeln!(&mut writer, "{}, {}", file_path, problem.range)?;
 
         writeln!(&mut writer, "   |")?;
         writeln!(&mut writer, "   | {}", problem.context.as_str())?;
