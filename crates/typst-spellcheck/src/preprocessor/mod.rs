@@ -20,7 +20,7 @@ use typst_syntax::{SyntaxKind, SyntaxNode};
 ///
 /// Inside a `FuncCall`, `ShowRule`, `SetRule`, `LetBinding` node, only the contents of
 /// `Markdown` nodes are recorded.
-pub fn preprocess<'a>(root: &'a SyntaxNode) -> Vec<Paragraph<'a>> {
+pub fn preprocess(root: &SyntaxNode) -> Vec<Paragraph<'_>> {
     let (mut paragraphs, partial_paragraph) =
         recursively_build_paragraphs(root, Paragraph { nodes: vec![] }, false);
 
@@ -129,8 +129,7 @@ fn recursively_build_paragraphs<'a>(
     }
 
     // Go through this node's children and add their paragraphs
-    let mut iter = node.children();
-    while let Some(child) = iter.next() {
+    for child in node.children() {
         let (mut child_groups, new_current_group) =
             recursively_build_paragraphs(child, current_paragraph, code_mode);
 

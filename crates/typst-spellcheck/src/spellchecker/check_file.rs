@@ -57,8 +57,12 @@ impl Spellchecker {
                     request.level = Level::Picky
                 }
 
-                request.disabled_rules = self.languagetool_config.disabled_rules.clone();
-                request.disabled_categories = self.languagetool_config.disabled_categories.clone();
+                request
+                    .disabled_rules
+                    .clone_from(&self.languagetool_config.disabled_rules);
+                request
+                    .disabled_categories
+                    .clone_from(&self.languagetool_config.disabled_categories);
 
                 let client = Arc::clone(&self.client);
 
@@ -73,7 +77,7 @@ impl Spellchecker {
             let response = result?;
 
             if debug {
-                debug_response(&response, &paragraph, &text, &node_contributions);
+                debug_response(&response, paragraph, &text, &node_contributions);
             }
 
             for lt_match in response.matches {
