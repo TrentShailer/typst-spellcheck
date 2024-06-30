@@ -51,76 +51,74 @@ fn recursively_build_paragraphs<'a>(
                 paragraphs.push(current_paragraph);
                 current_paragraph = Paragraph { nodes: vec![] };
             }
-        } else {
-            return (paragraphs, current_paragraph);
         }
-    }
-
-    match node_kind {
-        // Terminate the paragraph
-        SyntaxKind::Parbreak => {
-            if !current_paragraph.nodes.is_empty() {
-                paragraphs.push(current_paragraph);
-                current_paragraph = Paragraph { nodes: vec![] };
-            }
-        }
-
-        // If there are other nodes in the paragraph, to maintain context
-        // a fake node is appended in place of the real node.
-        SyntaxKind::Raw | SyntaxKind::Equation | SyntaxKind::FieldAccess => {
-            if !current_paragraph.nodes.is_empty() {
-                let node_text = format!("`{}`", node_kind.name());
-                let mut fake_node = SyntaxNode::leaf(SyntaxKind::Text, node_text);
-                fake_node.synthesize(node.span());
-
-                current_paragraph.nodes.push(Cow::Owned(fake_node));
+    } else {
+        match node_kind {
+            // Terminate the paragraph
+            SyntaxKind::Parbreak => {
+                if !current_paragraph.nodes.is_empty() {
+                    paragraphs.push(current_paragraph);
+                    current_paragraph = Paragraph { nodes: vec![] };
+                }
             }
 
-            return (paragraphs, current_paragraph);
-        }
+            // If there are other nodes in the paragraph, to maintain context
+            // a fake node is appended in place of the real node.
+            SyntaxKind::Raw | SyntaxKind::Equation | SyntaxKind::FieldAccess => {
+                if !current_paragraph.nodes.is_empty() {
+                    let node_text = format!("`{}`", node_kind.name());
+                    let mut fake_node = SyntaxNode::leaf(SyntaxKind::Text, node_text);
+                    fake_node.synthesize(node.span());
 
-        // Hash and label nodes are ignored
-        SyntaxKind::Hash
-        | SyntaxKind::Label
-        | SyntaxKind::ModuleImport
-        | SyntaxKind::ModuleInclude => return (paragraphs, current_paragraph),
+                    current_paragraph.nodes.push(Cow::Owned(fake_node));
+                }
 
-        // Toggle code mode for code nodes
-        SyntaxKind::FuncCall | SyntaxKind::ShowRule | SyntaxKind::SetRule => code_mode = true,
-
-        // To reduce load on languagetool, headings may be ignored
-        // SyntaxKind::Heading => 'heading: {
-        //     if !node.text().is_empty() {
-        //         break 'heading;
-        //     }
-
-        //     if spellcheck_config.ignore_headings {
-        //         return (paragraphs, current_paragraph);
-        //     } else {
-        //         current_paragraph.nodes.push(Cow::Borrowed(node));
-        //     }
-        // }
-
-        // Space nodes should not be appended to empty paragraphs
-        SyntaxKind::Space => 'space: {
-            if node.text().is_empty() {
-                break 'space;
+                return (paragraphs, current_paragraph);
             }
 
-            if current_paragraph.nodes.is_empty() {
-                return (vec![], current_paragraph);
-            } else {
+            // Hash and label nodes are ignored
+            SyntaxKind::Hash
+            | SyntaxKind::Label
+            | SyntaxKind::ModuleImport
+            | SyntaxKind::ModuleInclude => return (paragraphs, current_paragraph),
+
+            // Toggle code mode for code nodes
+            SyntaxKind::FuncCall | SyntaxKind::ShowRule | SyntaxKind::SetRule => code_mode = true,
+
+            // To reduce load on languagetool, headings may be ignored
+            // SyntaxKind::Heading => 'heading: {
+            //     if !node.text().is_empty() {
+            //         break 'heading;
+            //     }
+
+            //     if spellcheck_config.ignore_headings {
+            //         return (paragraphs, current_paragraph);
+            //     } else {
+            //         current_paragraph.nodes.push(Cow::Borrowed(node));
+            //     }
+            // }
+
+            // Space nodes should not be appended to empty paragraphs
+            SyntaxKind::Space => 'space: {
+                if node.text().is_empty() {
+                    break 'space;
+                }
+
+                if current_paragraph.nodes.is_empty() {
+                    return (vec![], current_paragraph);
+                } else {
+                    current_paragraph.nodes.push(Cow::Borrowed(node));
+                }
+            }
+
+            // Other nodes should be recorded if they have text content
+            _ => 'other: {
+                if node.text().is_empty() {
+                    break 'other;
+                }
+
                 current_paragraph.nodes.push(Cow::Borrowed(node));
             }
-        }
-
-        // Other nodes should be recorded if they have text content
-        _ => 'other: {
-            if node.text().is_empty() {
-                break 'other;
-            }
-
-            current_paragraph.nodes.push(Cow::Borrowed(node));
         }
     }
 

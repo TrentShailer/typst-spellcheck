@@ -57,6 +57,10 @@ pub struct Args {
     #[arg(long, action = ArgAction::SetTrue)]
     pub debug: Option<bool>,
 
+    /// Removes default disabled rules (WHITESPACE_RULE)
+    #[arg(long, action = ArgAction::SetTrue)]
+    pub no_default_disabled_rules: Option<bool>,
+
     /// Typst file to spellcheck
     #[arg(value_hint = clap::ValueHint::DirPath)]
     pub file: PathBuf,

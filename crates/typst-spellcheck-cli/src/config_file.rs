@@ -14,6 +14,8 @@ pub struct Config {
     pub spellcheck_config: SpellcheckConfig,
 }
 
+const DEFAULT_DISABLED_RULES: [&str; 1] = ["WHITESPACE_RULE"];
+
 impl Config {
     pub fn from_args_or_file(args: Args) -> Result<Config, Error> {
         let config_path = match args.config_file {
@@ -37,6 +39,25 @@ impl Config {
             Config::default()
         };
 
+        let mut disabled_rules = args
+            .disabed_rules
+            .or(config_file.languagetool_config.disabled_rules);
+
+        if let Some(no_default_disabled_rules) = args.no_default_disabled_rules {
+            if !no_default_disabled_rules {
+                let mut default_disabled_rules: Vec<String> = DEFAULT_DISABLED_RULES
+                    .iter()
+                    .map(|r| r.to_string())
+                    .collect();
+
+                if let Some(specified_rules) = disabled_rules.as_mut() {
+                    specified_rules.append(&mut default_disabled_rules);
+                } else {
+                    disabled_rules = Some(default_disabled_rules)
+                }
+            }
+        }
+
         // Build configs from args and file
         let languagetool_config = LanguageToolConfig {
             host: args.host.unwrap_or(config_file.languagetool_config.host),
@@ -48,9 +69,7 @@ impl Config {
             disabled_categories: args
                 .disabed_categories
                 .or(config_file.languagetool_config.disabled_categories),
-            disabled_rules: args
-                .disabed_rules
-                .or(config_file.languagetool_config.disabled_rules),
+            disabled_rules,
             picky: args.picky.or(config_file.languagetool_config.picky),
         };
 
