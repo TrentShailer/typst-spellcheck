@@ -16,7 +16,7 @@ use typst_syntax::{SyntaxKind, SyntaxNode};
 /// `Raw`, `Equation`, and `FieldAccess` nodes are replaced with placeholder
 /// text so lanugagetool doesn't flag them while still maintaining context.
 ///
-/// `Hash`, `Label`, `ModuleImport`, `ModuleInclude`, `LineComment`, `BlockComment`, `Ident` nodes are ignored.
+/// `Hash`, `Label`, `ModuleImport`, `ModuleInclude`, `LineComment`, `BlockComment`, `Ident`, `Underscore`. `Star` nodes are ignored.
 ///
 /// Inside a `FuncCall`, `ShowRule`, `SetRule`, `LetBinding` node, only the contents of
 /// `Markdown` nodes are recorded.
@@ -47,10 +47,10 @@ fn recursively_build_paragraphs<'a>(
     if code_mode {
         if node_kind == SyntaxKind::Markup {
             code_mode = false;
-            if !current_paragraph.nodes.is_empty() {
+            /* if !current_paragraph.nodes.is_empty() {
                 paragraphs.push(current_paragraph);
                 current_paragraph = Paragraph { nodes: vec![] };
-            }
+            } */
         }
     } else {
         match node_kind {
@@ -83,7 +83,9 @@ fn recursively_build_paragraphs<'a>(
             | SyntaxKind::ModuleInclude
             | SyntaxKind::LineComment
             | SyntaxKind::BlockComment
-            | SyntaxKind::Ident => return (paragraphs, current_paragraph),
+            | SyntaxKind::Ident
+            | SyntaxKind::Underscore
+            | SyntaxKind::Star => return (paragraphs, current_paragraph),
 
             // Toggle code mode for code nodes
             SyntaxKind::FuncCall
