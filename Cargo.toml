@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+thiserror = "1.0"
+typst-syntax = "0.11"
+languagetool-rust = { version = "2.1", default-features = false, features = [
+	"native-tls",
+	"multithreaded",
+] }
+
+typst-spellcheck = { path = "crates/typst-spellcheck" }

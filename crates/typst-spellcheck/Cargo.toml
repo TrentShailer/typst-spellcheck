@@ -1,0 +1,15 @@
+[package]
+name = "typst-spellcheck"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = { workspace = true }
+thiserror = { workspace = true }
+typst-syntax = { workspace = true }
+languagetool-rust = { workspace = true }
+serde = { workspace = true, optional = true }
+futures = "0.3"
+
+[features]
+serde = ["dep:serde"]

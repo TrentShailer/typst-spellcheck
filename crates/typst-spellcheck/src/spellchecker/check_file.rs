@@ -1,0 +1,96 @@
+use std::{sync::Arc, time::Instant};
+
+use futures::{stream::FuturesUnordered, StreamExt};
+use languagetool_rust::{check::Level, CheckRequest};
+use thiserror::Error;
+use typst_syntax::{FileId, Source, VirtualPath};
+
+use crate::{
+    preprocessor::{merge_short::merge_short, preprocess},
+    problem::Problem,
+};
+
+use super::{metadata::Metadata, Spellchecker};
+
+impl Spellchecker {
+    pub async fn check_file(
+        &self,
+        file_path: &str,
+        file_contents: String,
+    ) -> Result<(Vec<Problem>, Metadata), Error> {
+        let source = Source::new(
+            FileId::new(None, VirtualPath::new(file_path)),
+            file_contents,
+        );
+
+        let paragraphs = preprocess(source.root());
+        let paragraphs = merge_short(paragraphs, 512);
+
+        let mut tasks: FuturesUnordered<_> = paragraphs
+            .iter()
+            .map(|paragraph| {
+                let (text, contributions) = paragraph.get_text();
+                let mut request = CheckRequest::default()
+                    .with_text(text.clone())
+                    .with_language(self.languagetool_config.language.clone());
+
+                if self.languagetool_config.picky.unwrap_or(false) {
+                    request.level = Level::Picky
+                }
+
+                request.disabled_rules = self.languagetool_config.disabled_rules.clone();
+                request.disabled_categories = self.languagetool_config.disabled_categories.clone();
+
+                let client = Arc::clone(&self.client);
+
+                async move { (client.check(&request).await, paragraph, text, contributions) }
+            })
+            .collect();
+
+        let mut problems = vec![];
+
+        let req_start = Instant::now();
+        while let Some((result, _paragraph, text, node_contributions)) = tasks.next().await {
+            let response = result?;
+
+            for lt_match in response.matches {
+                let match_text = &text[lt_match.offset..(lt_match.offset + lt_match.length)];
+
+                // Check if match is an ignore word
+                if let Some(ignore_words) = self.spellcheck_config.ignore_words.as_ref() {
+                    if ignore_words.contains(&match_text.to_string()) {
+                        continue;
+                    }
+                }
+
+                let maybe_problem = Problem::try_from_match(
+                    &source,
+                    lt_match.clone(),
+                    match_text.to_string(),
+                    &node_contributions,
+                );
+
+                match maybe_problem {
+                    Some(problem) => problems.push(problem),
+                    None => {
+                        log::warn!("Failed to make problem for match:\n{:?}", lt_match);
+                    }
+                }
+            }
+        }
+        let req_end = Instant::now();
+
+        let metadata = Metadata {
+            languagetool_request_time: req_end.duration_since(req_start),
+            paragraph_count: paragraphs.len(),
+        };
+
+        Ok((problems, metadata))
+    }
+}
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("Failed to check file with languagetool.\n{0}")]
+    LanguageTool(#[from] languagetool_rust::error::Error),
+}

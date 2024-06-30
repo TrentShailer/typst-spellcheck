@@ -1,0 +1,15 @@
+[package]
+name = "typst-spellcheck-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+typst-spellcheck = { workspace = true, features = ["serde"] }
+languagetool-rust = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+tokio = { version = "1.38", features = ["full"] }
+owo-colors = "4.0"
+clap = { version = "4.5", features = ["derive"] }
+toml = "0.8"
