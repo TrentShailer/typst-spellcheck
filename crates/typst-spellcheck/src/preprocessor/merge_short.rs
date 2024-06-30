@@ -12,7 +12,7 @@ pub fn merge_short(paragraphs: Vec<Paragraph>, min_length: usize) -> Vec<Paragra
         if latest_is_short {
             let latest = output.last_mut().unwrap();
 
-            let break_node = SyntaxNode::leaf(SyntaxKind::Space, "\r\n");
+            let break_node = SyntaxNode::leaf(SyntaxKind::Space, "\r\n\r\n");
 
             latest.nodes.push(Cow::Owned(break_node));
             latest.nodes.append(&mut paragraph.nodes);
