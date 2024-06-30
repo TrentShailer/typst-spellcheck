@@ -28,6 +28,7 @@ impl Problem {
         node_contributions: &[NodeContribution],
     ) -> Option<Self> {
         let match_start = lt_match.offset;
+        let match_end = lt_match.offset + lt_match.length;
 
         // Find the contribution that contains the start of the match
         let start_contribution = node_contributions.iter().find(|contribution| {
@@ -36,14 +37,24 @@ impl Problem {
                 && match_start < contribution.offset + contribution.length
         })?;
 
+        // Find the contribution that contains the end of the match
+        let end_contribution = node_contributions.iter().find(|contribution| {
+            contribution.length != 0
+                && match_end >= contribution.offset
+                && match_end <= contribution.offset + contribution.length
+        })?;
+
         // Number of bytes from the start of the node that the match starts
         let match_start_offset = match_start - start_contribution.offset;
+        let match_end_offset = match_end - end_contribution.offset;
 
         // Find the range of that node in document space
         let node_start = source.range(start_contribution.span)?.start;
+        let node_end = source.range(end_contribution.span)?.start;
+
         // because a match may start part way through a node, the start range needs to be offset by the amount
         let doc_match_start = node_start + match_start_offset;
-        let doc_match_end = doc_match_start + lt_match.length;
+        let doc_match_end = node_end + match_end_offset;
 
         let range_start = Position {
             column: source.byte_to_column(doc_match_start)? + 1,

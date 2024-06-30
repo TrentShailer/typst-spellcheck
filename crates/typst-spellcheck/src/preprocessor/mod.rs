@@ -105,8 +105,8 @@ fn recursively_build_paragraphs<'a>(
                 }
             }
 
-            // Headings should terminate existing paragraphs
-            SyntaxKind::Heading => {
+            // Containers should terminate existing paragraphs
+            SyntaxKind::Heading | SyntaxKind::ContentBlock => {
                 if !current_paragraph.nodes.is_empty() {
                     paragraphs.push(current_paragraph);
                     current_paragraph = Paragraph { nodes: vec![] };
@@ -137,8 +137,8 @@ fn recursively_build_paragraphs<'a>(
     }
 
     match node_kind {
-        // Headings should only contain it's children
-        SyntaxKind::Heading => {
+        // Containers should only contain it's children
+        SyntaxKind::Heading | SyntaxKind::ContentBlock => {
             if !current_paragraph.nodes.is_empty() {
                 paragraphs.push(current_paragraph);
                 current_paragraph = Paragraph { nodes: vec![] };
