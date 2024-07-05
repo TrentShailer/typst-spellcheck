@@ -67,9 +67,10 @@ pub fn display_problems(
 
     writeln!(
         &mut writer,
-        "{}: processed {} paragraphs and found {} problems in {:.2}s",
+        "{}: processed {} chunks ({} words) and found {} problem(s) in {:.2}s",
         "Finished".green().bold(),
         metadata.paragraph_count.bold(),
+        metadata.word_count,
         problems.len().bold(),
         metadata.languagetool_request_time.as_secs_f32().bold()
     )?;

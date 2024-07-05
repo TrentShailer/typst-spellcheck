@@ -1,5 +1,6 @@
 pub mod args;
 mod config_file;
+mod logger;
 mod output;
 
 use std::{
@@ -10,6 +11,7 @@ use std::{
 use args::Args;
 use clap::Parser;
 use config_file::Config;
+use logger::init_fern;
 use output::display_problems;
 use owo_colors::OwoColorize;
 use thiserror::Error;
@@ -24,10 +26,10 @@ async fn main() {
 
 async fn run() -> Result<(), Error> {
     let args = Args::parse();
-    // TODO add a logger
+    let debug = args.debug.unwrap_or(false);
+    init_fern(debug)?;
 
     let file = args.file.clone();
-    let debug = args.debug.unwrap_or(false);
     let config = Config::from_args_or_file(args)?;
 
     // check if defined file exists
@@ -50,6 +52,9 @@ async fn run() -> Result<(), Error> {
 
 #[derive(Debug, Error)]
 pub enum Error {
+    #[error("Failed to initialise logger.\n{0}")]
+    Logger(#[from] fern::InitError),
+
     #[error("Failed to get Pwd from environment.\n{0}")]
     Pwd(#[source] io::Error),
 
