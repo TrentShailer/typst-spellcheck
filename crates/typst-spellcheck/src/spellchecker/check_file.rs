@@ -8,6 +8,7 @@ use typst_syntax::{FileId, Source, VirtualPath};
 use crate::{
     preprocessor::{merge_short::merge_short, preprocess},
     problem::Problem,
+    word_count::count_words_naive,
 };
 
 use super::{
@@ -107,7 +108,16 @@ impl Spellchecker {
         }
         let req_end = Instant::now();
 
+        let text = paragraphs
+            .iter()
+            .map(|p| p.get_text().0)
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        let word_count = count_words_naive(&text);
+
         let metadata = Metadata {
+            word_count,
             languagetool_request_time: req_end.duration_since(req_start),
             paragraph_count: paragraphs.len(),
         };

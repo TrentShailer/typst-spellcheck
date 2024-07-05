@@ -2,6 +2,7 @@ pub mod preprocessor;
 pub mod problem;
 pub mod range;
 pub mod spellchecker;
+pub mod word_count;
 
 /// Languagetool specific config
 #[derive(Debug, Clone, Default)]
